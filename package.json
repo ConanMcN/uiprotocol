@@ -1,0 +1,24 @@
+{
+  "name": "uiprotocol-a2ui-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A2UI neutral runtime + Fragments adapter",
+  "scripts": {
+    "build": "turbo build",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean && rm -rf node_modules",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
