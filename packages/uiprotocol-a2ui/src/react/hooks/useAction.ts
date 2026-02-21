@@ -31,7 +31,7 @@ export function useAction() {
         return false;
       }
 
-      if (!action.event) {
+      if (!action || typeof action.event !== "string" || action.event.length === 0) {
         runtime.onClientError?.({
           code: DIAGNOSTIC_CODES.invalidEnvelope,
           message: "Action event is required.",

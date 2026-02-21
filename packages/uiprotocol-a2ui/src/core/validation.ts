@@ -24,12 +24,24 @@ export function validateValue(
   const errors: A2UIClientErrorPayload[] = [];
 
   if (options.pattern && typeof options.value === "string") {
-    const regex = new RegExp(options.pattern);
-    if (!regex.test(options.value)) {
+    try {
+      const regex = new RegExp(options.pattern);
+      if (!regex.test(options.value)) {
+        errors.push(
+          toClientError(
+            DIAGNOSTIC_CODES.validationRegexFailed,
+            "Value does not match required pattern.",
+            {
+              pattern: options.pattern
+            }
+          )
+        );
+      }
+    } catch {
       errors.push(
         toClientError(
           DIAGNOSTIC_CODES.validationRegexFailed,
-          "Value does not match required pattern.",
+          `Invalid regex pattern: ${options.pattern}`,
           {
             pattern: options.pattern
           }
@@ -40,7 +52,7 @@ export function validateValue(
 
   if (options.checks?.length) {
     for (const check of options.checks) {
-      const resolvedArgs = resolveUnknownValue(
+      const rawResolved = resolveUnknownValue(
         {
           ...(check.args ?? {}),
           value: options.value
@@ -50,7 +62,12 @@ export function validateValue(
           scopePath: options.scopePath,
           functionRegistry
         }
-      ) as Record<string, unknown>;
+      );
+
+      const resolvedArgs: Record<string, unknown> =
+        rawResolved && typeof rawResolved === "object" && !Array.isArray(rawResolved)
+          ? (rawResolved as Record<string, unknown>)
+          : { value: options.value };
 
       try {
         const result = functionRegistry.execute(check.call, resolvedArgs);
@@ -60,7 +77,8 @@ export function validateValue(
               DIAGNOSTIC_CODES.validationCheckFailed,
               `Validation check '${check.call}' failed.`,
               {
-                call: check.call
+                call: check.call,
+                resolvedArgs
               }
             )
           );
@@ -72,6 +90,7 @@ export function validateValue(
             `Validation check '${check.call}' threw an error.`,
             {
               call: check.call,
+              resolvedArgs,
               cause: error instanceof Error ? error.message : String(error)
             }
           )

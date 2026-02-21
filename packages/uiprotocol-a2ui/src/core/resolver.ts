@@ -18,6 +18,8 @@ export interface ResolveOptions {
   dataModel: unknown;
   scopePath?: string;
   functionRegistry?: FunctionRegistry;
+  /** @internal Tracks visited objects to prevent infinite recursion on circular references. */
+  _visited?: Set<unknown>;
 }
 
 function resolveFunctionArgs(
@@ -76,9 +78,15 @@ export function resolveUnknownValue(
     return value;
   }
 
+  const visited = options._visited ?? new Set<unknown>();
+  if (visited.has(value)) {
+    return undefined;
+  }
+  visited.add(value);
+
   const resolved: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(value)) {
-    resolved[key] = resolveUnknownValue(entry, options);
+    resolved[key] = resolveUnknownValue(entry, { ...options, _visited: visited });
   }
   return resolved;
 }

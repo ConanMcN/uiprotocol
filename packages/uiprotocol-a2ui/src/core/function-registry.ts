@@ -47,9 +47,13 @@ function buildDefaultRegistry(): Record<string, FunctionExecutor> {
       if (typeof value !== "string" || typeof pattern !== "string") {
         return false;
       }
-      return new RegExp(pattern, typeof flags === "string" ? flags : undefined).test(
-        value
-      );
+      try {
+        return new RegExp(pattern, typeof flags === "string" ? flags : undefined).test(
+          value
+        );
+      } catch {
+        return false;
+      }
     },
     email: ({ value }) => {
       if (typeof value !== "string") {
@@ -90,7 +94,11 @@ function buildDefaultRegistry(): Record<string, FunctionExecutor> {
         options && typeof options === "object"
           ? (options as Intl.NumberFormatOptions)
           : undefined;
-      return new Intl.NumberFormat(parsedLocales, parsedOptions).format(numeric);
+      try {
+        return new Intl.NumberFormat(parsedLocales, parsedOptions).format(numeric);
+      } catch {
+        return String(numeric);
+      }
     },
     and: ({ values }) => toArray(values).every(Boolean),
     or: ({ values }) => toArray(values).some(Boolean),
@@ -103,15 +111,25 @@ function buildDefaultRegistry(): Record<string, FunctionExecutor> {
 
 export class FunctionRegistry {
   private readonly handlers = new Map<string, FunctionExecutor>();
+  private readonly builtInNames: ReadonlySet<string>;
+  private readonly onBuiltInOverride?: (name: string) => void;
 
-  constructor(entries?: Record<string, FunctionExecutor>) {
+  constructor(
+    entries?: Record<string, FunctionExecutor>,
+    options?: { onBuiltInOverride?: (name: string) => void }
+  ) {
     const defaults = buildDefaultRegistry();
     for (const [name, handler] of Object.entries(defaults)) {
       this.handlers.set(name, handler);
     }
+    this.builtInNames = new Set(this.handlers.keys());
+    this.onBuiltInOverride = options?.onBuiltInOverride;
 
     if (entries) {
       for (const [name, handler] of Object.entries(entries)) {
+        if (this.builtInNames.has(name)) {
+          this.onBuiltInOverride?.(name);
+        }
         this.handlers.set(name, handler);
       }
     }
@@ -122,6 +140,9 @@ export class FunctionRegistry {
   }
 
   register(name: string, handler: FunctionExecutor): void {
+    if (this.builtInNames.has(name)) {
+      this.onBuiltInOverride?.(name);
+    }
     this.handlers.set(name, handler);
   }
 

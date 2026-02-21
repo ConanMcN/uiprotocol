@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { validateValue } from "../../core";
 import type { FunctionCall } from "../../core";
 import { useRuntimeContext, useSurfaceContext } from "../context";
@@ -15,6 +15,7 @@ export function useFormBinding(options: UseFormBindingOptions) {
   const surfaceContext = useSurfaceContext();
   const { value, setValue, path } = useDataBinding(options.path);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<string | null>(null);
 
   const surface = useMemo(
     () => runtime.manager.getSurface(surfaceContext.surfaceId),
@@ -34,6 +35,10 @@ export function useFormBinding(options: UseFormBindingOptions) {
         runtime.functionRegistry
       );
 
+      const nextError = result.ok ? null : result.errors[0].message;
+      errorRef.current = nextError;
+      setError(nextError);
+
       if (!result.ok) {
         for (const item of result.errors) {
           runtime.onClientError?.({
@@ -42,9 +47,6 @@ export function useFormBinding(options: UseFormBindingOptions) {
             path
           });
         }
-        setError(result.errors[0].message);
-      } else {
-        setError(null);
       }
 
       return result;
@@ -74,6 +76,7 @@ export function useFormBinding(options: UseFormBindingOptions) {
   return {
     value,
     error,
+    errorRef,
     onChange,
     validate,
     setValue

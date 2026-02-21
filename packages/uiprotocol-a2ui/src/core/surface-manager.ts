@@ -194,7 +194,21 @@ export class SurfaceManager {
       );
     }
 
-    pruneUnreachable(surface);
+    const pruned = pruneUnreachable(surface);
+    for (const removedId of pruned) {
+      diagnostics.push(
+        diagnostic(
+          DIAGNOSTIC_CODES.missingComponentType,
+          `Pruned unreachable component '${removedId}' from surface '${surfaceId}'.`,
+          {
+            severity: "warning",
+            surfaceId,
+            componentId: removedId
+          }
+        )
+      );
+    }
+
     this.notify();
 
     emitDiagnostics(diagnostics, this.options.onDiagnostic);

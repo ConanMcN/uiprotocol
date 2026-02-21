@@ -35,4 +35,31 @@ describe("FunctionRegistry", () => {
 
     expect(registry.execute("formatNumber", { value: 1200 })).toBe("1,200");
   });
+
+  it("handles invalid regex patterns without crashing", () => {
+    expect(registry.execute("regex", { value: "test", pattern: "[invalid(" })).toBe(
+      false
+    );
+  });
+
+  it("warns when overriding built-in functions via constructor", () => {
+    const overridden: string[] = [];
+    const custom = new FunctionRegistry(
+      { required: () => true },
+      { onBuiltInOverride: (name) => overridden.push(name) }
+    );
+
+    expect(overridden).toContain("required");
+    expect(custom.execute("required", { value: "" })).toBe(true);
+  });
+
+  it("warns when overriding built-in functions via register", () => {
+    const overridden: string[] = [];
+    const custom = new FunctionRegistry(undefined, {
+      onBuiltInOverride: (name) => overridden.push(name)
+    });
+
+    custom.register("email", () => false);
+    expect(overridden).toContain("email");
+  });
 });

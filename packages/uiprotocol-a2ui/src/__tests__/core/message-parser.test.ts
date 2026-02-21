@@ -68,4 +68,23 @@ describe("parseMessage", () => {
       expect(result.errors[0].code).toBe("A2UI_INVALID_ENVELOPE");
     }
   });
+
+  it("warns when a component references itself as a child", () => {
+    const result = parseMessage({
+      version: "v0.9",
+      updateComponents: {
+        surfaceId: "s1",
+        components: [
+          { id: "root", component: "Column", children: ["root"] }
+        ]
+      }
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.warnings[0].code).toBe("A2UI_INVALID_ENVELOPE");
+      expect(result.warnings[0].message).toContain("references itself");
+    }
+  });
 });

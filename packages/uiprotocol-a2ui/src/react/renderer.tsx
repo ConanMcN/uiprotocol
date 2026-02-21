@@ -152,6 +152,12 @@ export function A2UIRenderer({ surfaceId, fallback = DEFAULT_FALLBACK }: A2UIRen
         );
       }
 
+      if (!component.component) {
+        return (
+          <div data-a2ui-missing-component={componentId}>{`Missing component type: ${componentId}`}</div>
+        );
+      }
+
       const ComponentRenderer = runtime.componentsMap[component.component];
       if (!ComponentRenderer) {
         warnOnce(`unknown:${surfaceId}:${component.component}`, {

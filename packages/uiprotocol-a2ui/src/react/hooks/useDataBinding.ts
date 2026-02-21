@@ -1,5 +1,5 @@
-import { useCallback, useSyncExternalStore } from "react";
-import { resolveByPointer, resolvePointerPath } from "../../core";
+import { useCallback, useRef, useSyncExternalStore } from "react";
+import { DIAGNOSTIC_CODES, resolveByPointer, resolvePointerPath } from "../../core";
 import { useRuntimeContext, useSurfaceContext } from "../context";
 
 export interface SetValueOptions {
@@ -9,6 +9,7 @@ export interface SetValueOptions {
 export function useDataBinding(path: string) {
   const runtime = useRuntimeContext();
   const surfaceContext = useSurfaceContext();
+  const warnedMissing = useRef(false);
 
   const absolutePath = resolvePointerPath(path, surfaceContext.scopePath);
 
@@ -17,8 +18,19 @@ export function useDataBinding(path: string) {
     () => {
       const surface = runtime.manager.getSurface(surfaceContext.surfaceId);
       if (!surface) {
+        if (!warnedMissing.current) {
+          warnedMissing.current = true;
+          runtime.onWarning?.({
+            code: DIAGNOSTIC_CODES.surfaceNotFound,
+            message: `Surface '${surfaceContext.surfaceId}' not found in useDataBinding.`,
+            severity: "warning",
+            surfaceId: surfaceContext.surfaceId,
+            path: absolutePath
+          });
+        }
         return undefined;
       }
+      warnedMissing.current = false;
       return resolveByPointer(surface.dataModel, absolutePath);
     }
   );

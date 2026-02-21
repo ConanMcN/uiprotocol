@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FunctionRegistry, resolveDynamicValue } from "../../core";
+import { FunctionRegistry, resolveDynamicValue, resolveUnknownValue } from "../../core";
 
 describe("resolver", () => {
   const dataModel = {
@@ -66,5 +66,15 @@ describe("resolver", () => {
         }
       )
     ).toThrow(/Unknown function/);
+  });
+
+  it("handles circular data model references without infinite loop", () => {
+    const circular: Record<string, unknown> = { name: "root" };
+    circular.self = circular;
+
+    const result = resolveUnknownValue(circular, { dataModel: {} });
+    expect(result).toBeDefined();
+    expect((result as Record<string, unknown>).name).toBe("root");
+    expect((result as Record<string, unknown>).self).toBeUndefined();
   });
 });

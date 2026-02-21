@@ -22,6 +22,14 @@ function assertPointer(pointer: string): void {
   }
 }
 
+/**
+ * Splits a JSON Pointer (RFC 6901) into decoded path tokens.
+ *
+ * Both `""` (empty string) and `"/"` are treated as referencing the root document,
+ * returning an empty token array. This is a deliberate simplification — RFC 6901
+ * distinguishes `""` (whole document) from `"/"` (key `""` in root), but for A2UI
+ * data-model resolution treating both as "root" is the practical choice.
+ */
 function pointerToTokens(pointer: string): string[] {
   if (!pointer || pointer === "/") {
     return [];
@@ -90,7 +98,7 @@ export function resolveByPointer<T = unknown>(
   for (const token of tokens) {
     if (Array.isArray(current)) {
       const index = Number(token);
-      if (!Number.isInteger(index)) {
+      if (!Number.isInteger(index) || index < 0) {
         return undefined;
       }
       current = current[index];

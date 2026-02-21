@@ -1,3 +1,4 @@
+import { collectChildComponentIds } from "./child-refs";
 import {
   DIAGNOSTIC_CODES,
   diagnostic,
@@ -5,6 +6,7 @@ import {
   parseSuccess
 } from "./diagnostics";
 import type {
+  A2UIComponent,
   A2UIMessage,
   A2UIMessageType,
   ParseResult,
@@ -69,6 +71,8 @@ function validateUpdateComponents(
     ]);
   }
 
+  const warnings = [];
+
   for (let index = 0; index < payload.components.length; index += 1) {
     const patch = payload.components[index];
     if (!isObject(patch) || typeof patch.id !== "string" || patch.id.length === 0) {
@@ -79,9 +83,20 @@ function validateUpdateComponents(
         )
       ]);
     }
+
+    const childIds = collectChildComponentIds(patch as A2UIComponent);
+    if (childIds.includes(patch.id as string)) {
+      warnings.push(
+        diagnostic(
+          DIAGNOSTIC_CODES.invalidEnvelope,
+          `Component '${patch.id}' references itself as a child.`,
+          { severity: "warning", componentId: patch.id as string }
+        )
+      );
+    }
   }
 
-  return parseSuccess(payload as unknown as UpdateComponentsPayload);
+  return parseSuccess(payload as unknown as UpdateComponentsPayload, warnings);
 }
 
 function validateUpdateDataModel(
@@ -187,7 +202,7 @@ export function parseMessage(raw: unknown): ParseResult<A2UIMessage> {
       if (!validated.ok) {
         return validated;
       }
-      return parseSuccess(value as unknown as A2UIMessage);
+      return parseSuccess(value as unknown as A2UIMessage, validated.warnings);
     }
     case "updateDataModel": {
       const validated = validateUpdateDataModel(payload);

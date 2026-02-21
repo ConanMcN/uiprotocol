@@ -1,18 +1,10 @@
 import type { A2UIComponent } from "./types";
 
-const SINGLE_CHILD_KEYS = [
-  "child",
-  "contentChild",
-  "entryPointChild",
-  "headerChild",
-  "footerChild",
-  "leadingChild",
-  "trailingChild"
-] as const;
+/** Keys that are component metadata, not child references. */
+const SKIP_KEYS = new Set(["id", "component", "checks"]);
 
-const CHILD_LIST_KEYS = ["children"] as const;
-
-const OBJECT_LIST_KEYS = ["tabItems", "items", "actions", "options"] as const;
+/** Keys within objects that may reference child component IDs. */
+const CHILD_REF_KEYS = ["child", "panelChild", "contentChild", "entryPointChild", "headerChild", "footerChild", "leadingChild", "trailingChild"];
 
 function maybePushChild(target: string[], value: unknown): void {
   if (typeof value === "string" && value.length > 0) {
@@ -30,39 +22,49 @@ function maybePushChildren(target: string[], value: unknown): void {
   }
 }
 
+function scanObjectForChildRefs(target: string[], obj: Record<string, unknown>): void {
+  for (const refKey of CHILD_REF_KEYS) {
+    maybePushChild(target, obj[refKey]);
+  }
+
+  const children = obj.children;
+  maybePushChildren(target, children);
+}
+
 export function collectChildComponentIds(component: A2UIComponent): string[] {
   const childIds: string[] = [];
 
-  for (const key of SINGLE_CHILD_KEYS) {
-    maybePushChild(childIds, component[key]);
-  }
-
-  for (const key of CHILD_LIST_KEYS) {
-    maybePushChildren(childIds, component[key]);
-  }
-
-  for (const key of OBJECT_LIST_KEYS) {
-    const entries = component[key];
-    if (!Array.isArray(entries)) {
+  for (const [key, value] of Object.entries(component)) {
+    if (SKIP_KEYS.has(key)) {
       continue;
     }
 
-    for (const entry of entries) {
-      if (!entry || typeof entry !== "object") {
-        continue;
+    // Direct string child reference (e.g., child, headerChild, footerChild)
+    if (typeof value === "string") {
+      if (CHILD_REF_KEYS.includes(key) || key === "child") {
+        maybePushChild(childIds, value);
       }
-
-      const child = (entry as Record<string, unknown>).child;
-      const panelChild = (entry as Record<string, unknown>).panelChild;
-      maybePushChild(childIds, child);
-      maybePushChild(childIds, panelChild);
+      continue;
     }
-  }
 
-  const template = component.template;
-  if (template && typeof template === "object") {
-    maybePushChild(childIds, (template as Record<string, unknown>).child);
-    maybePushChildren(childIds, (template as Record<string, unknown>).children);
+    // Direct string array (e.g., children)
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (typeof entry === "string") {
+          // Array of child IDs (e.g., children: ["id1", "id2"])
+          maybePushChild(childIds, entry);
+        } else if (entry && typeof entry === "object") {
+          // Array of objects with child refs (e.g., tabItems, options, menuItems)
+          scanObjectForChildRefs(childIds, entry as Record<string, unknown>);
+        }
+      }
+      continue;
+    }
+
+    // Nested object (e.g., template)
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      scanObjectForChildRefs(childIds, value as Record<string, unknown>);
+    }
   }
 
   return childIds;

@@ -41,4 +41,17 @@ describe("pointer utilities", () => {
     expect(resolvePointerPath("./name", "/items/0")).toBe("/items/0/name");
     expect(resolvePointerPath("../1/name", "/items/0")).toBe("/items/1/name");
   });
+
+  it("rejects negative array indices", () => {
+    const model = { items: ["a", "b", "c"] };
+    expect(resolveByPointer(model, "/items/-1")).toBeUndefined();
+  });
+
+  it("treats empty string and '/' as root pointers", () => {
+    const model = { name: "root" };
+    expect(resolveByPointer(model, "")).toEqual(model);
+    expect(resolveByPointer(model, "/")).toEqual(model);
+    expect(resolvePointerPath("")).toBe("/");
+    expect(resolvePointerPath("/")).toBe("/");
+  });
 });

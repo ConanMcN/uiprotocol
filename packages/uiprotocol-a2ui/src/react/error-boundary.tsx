@@ -23,8 +23,12 @@ export class NodeErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error): void {
-    this.props.onError(error);
+  componentDidCatch(error: unknown): void {
+    const normalized =
+      error instanceof Error
+        ? error
+        : new Error(typeof error === "string" ? error : String(error));
+    this.props.onError(normalized);
   }
 
   render(): ReactNode {
