@@ -1,6 +1,6 @@
 {
   "name": "@uiprotocol/devtools",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Embeddable devtools panel for @uiprotocol/core runtime inspection",
   "type": "module",
   "license": "MIT",

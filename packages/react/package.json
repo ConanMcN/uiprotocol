@@ -1,6 +1,6 @@
 {
   "name": "@uiprotocol/react",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Protocol-agnostic React bindings for @uiprotocol/core",
   "type": "module",
   "license": "MIT",
