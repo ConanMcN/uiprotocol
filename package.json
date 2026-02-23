@@ -2,7 +2,7 @@
   "name": "uiprotocol-a2ui-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "A2UI neutral runtime + Fragments adapter",
+  "description": "UIProtocol — Protocol-agnostic agent UI runtime",
   "scripts": {
     "build": "turbo build",
     "test": "turbo test",

@@ -1,0 +1,36 @@
+{
+  "name": "@uiprotocol/core",
+  "version": "1.0.0",
+  "description": "Protocol-agnostic agent UI runtime — IR, trust, events, and utilities",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

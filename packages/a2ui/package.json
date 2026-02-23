@@ -1,0 +1,39 @@
+{
+  "name": "@uiprotocol/a2ui",
+  "version": "1.0.0",
+  "description": "A2UI v0.9 protocol adapter for @uiprotocol/core",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@uiprotocol/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
