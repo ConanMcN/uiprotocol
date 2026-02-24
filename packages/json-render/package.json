@@ -1,6 +1,6 @@
 {
   "name": "@uiprotocol/json-render",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "json-render protocol adapter for @uiprotocol/core",
   "type": "module",
   "license": "MIT",

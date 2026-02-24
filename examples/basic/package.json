@@ -13,7 +13,7 @@
     "@uiprotocol/a2ui": "workspace:*",
     "@uiprotocol/core": "workspace:*",
     "@uiprotocol/devtools": "workspace:*",
-    "@uiprotocol/json-render": "^0.1.0",
+    "@uiprotocol/json-render": "^0.2.0",
     "@uiprotocol/react": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "@uiprotocol/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Protocol-agnostic agent UI runtime — IR, trust, events, and utilities",
   "type": "module",
   "license": "MIT",
