@@ -5,7 +5,7 @@
 
 export const steps = [
   {
-    label: "1. Create surface",
+    label: "1. Create surface + layout",
     messages: [
       {
         version: "v0.9",
@@ -13,10 +13,31 @@ export const steps = [
           surfaceId: "todo-app",
         },
       },
+      {
+        version: "v0.9",
+        updateComponents: {
+          surfaceId: "todo-app",
+          components: [
+            {
+              id: "root",
+              component: "Container",
+              children: ["header"],
+              direction: "column",
+              gap: "16px",
+            },
+            {
+              id: "header",
+              component: "Text",
+              content: "Todo List",
+              variant: "heading",
+            },
+          ],
+        },
+      },
     ],
   },
   {
-    label: "2. Add layout + header",
+    label: "2. Add input row",
     messages: [
       {
         version: "v0.9",
@@ -29,12 +50,6 @@ export const steps = [
               children: ["header", "input-row", "list"],
               direction: "column",
               gap: "16px",
-            },
-            {
-              id: "header",
-              component: "Text",
-              content: "Todo List",
-              variant: "heading",
             },
             {
               id: "input-row",
@@ -68,7 +83,7 @@ export const steps = [
     ],
   },
   {
-    label: "3. Set initial data",
+    label: "3. Add todo items",
     messages: [
       {
         version: "v0.9",
@@ -78,11 +93,6 @@ export const steps = [
           value: { newItem: "", items: ["Buy groceries", "Walk the dog"] },
         },
       },
-    ],
-  },
-  {
-    label: "4. Add todo items",
-    messages: [
       {
         version: "v0.9",
         updateComponents: {
@@ -113,7 +123,7 @@ export const steps = [
     ],
   },
   {
-    label: "5. Add a status bar",
+    label: "4. Add status bar",
     messages: [
       {
         version: "v0.9",
