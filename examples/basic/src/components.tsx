@@ -1,89 +1,127 @@
+import {
+  Stack,
+  Text,
+  Input,
+  Button,
+  Card,
+  Badge,
+  Box,
+} from "@fragments-sdk/ui";
 import type { AdapterProps, ComponentsMap } from "@uiprotocol/react";
 
 function Container({ node, resolve, renderedChildren }: AdapterProps) {
   const direction = resolve<string>(node.props.direction) ?? "column";
-  const gap = resolve<string>(node.props.gap) ?? "8px";
+  const gap = resolve<string>(node.props.gap) ?? "md";
+
+  // Map pixel values to token values
+  const gapMap: Record<string, string> = {
+    "4px": "xs",
+    "8px": "sm",
+    "12px": "md",
+    "16px": "md",
+    "24px": "lg",
+  };
+  const gapToken = gapMap[gap] ?? gap;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: direction as "row" | "column",
-        gap,
-      }}
+    <Stack
+      direction={direction as "row" | "column"}
+      gap={gapToken as "xs" | "sm" | "md" | "lg" | "xl"}
     >
       {renderedChildren}
-    </div>
+    </Stack>
   );
 }
 
-function Text({ node, resolve }: AdapterProps) {
+function TextComponent({ node, resolve }: AdapterProps) {
   const content = resolve<string>(node.props.content) ?? "";
   const variant = resolve<string>(node.props.variant) ?? "body";
 
-  const style: React.CSSProperties =
-    variant === "heading"
-      ? { fontSize: "1.5rem", fontWeight: 700, margin: 0 }
-      : variant === "caption"
-        ? { fontSize: "0.85rem", color: "#888" }
-        : {};
+  const variantMap: Record<
+    string,
+    { as: "h2" | "p" | "small"; size: "lg" | "base" | "sm"; weight: "bold" | "normal" }
+  > = {
+    heading: { as: "h2", size: "lg", weight: "bold" },
+    body: { as: "p", size: "base", weight: "normal" },
+    caption: { as: "small", size: "sm", weight: "normal" },
+  };
 
-  return <p style={{ margin: 0, ...style }}>{String(content)}</p>;
+  const v = variantMap[variant] ?? variantMap.body;
+
+  return (
+    <Text as={v.as} size={v.size} weight={v.weight} color={variant === "caption" ? "tertiary" : "primary"}>
+      {String(content)}
+    </Text>
+  );
 }
 
-function Input({ node, resolve, setData }: AdapterProps) {
+function InputComponent({ node, resolve, setData }: AdapterProps) {
   const placeholder = resolve<string>(node.props.placeholder) ?? "";
   const bind = resolve<string>(node.props.bind);
   const value = bind ? (resolve<string>({ path: bind }) ?? "") : "";
 
   return (
-    <input
-      type="text"
-      placeholder={placeholder}
-      value={String(value)}
-      onChange={(e) => {
-        if (bind) setData(bind, e.target.value);
-      }}
-      style={{
-        flex: 1,
-        padding: "8px 12px",
-        border: "1px solid #ccc",
-        borderRadius: "6px",
-        fontSize: "1rem",
-      }}
-    />
+    <Box style={{ flex: 1 }}>
+      <Input
+        placeholder={placeholder}
+        value={String(value)}
+        onChange={(val) => {
+          if (bind) setData(bind, val);
+        }}
+      />
+    </Box>
   );
 }
 
-function Button({ node, resolve, dispatchAction }: AdapterProps) {
+function ButtonComponent({ node, resolve, dispatchAction }: AdapterProps) {
   const label = resolve<string>(node.props.label) ?? "Button";
+  const variant = resolve<string>(node.props.variant) as
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | undefined;
   const action = node.props.action as
     | { event: string; context?: Record<string, unknown> }
     | undefined;
 
   return (
-    <button
+    <Button
+      variant={variant ?? "primary"}
       onClick={() => {
         if (action) dispatchAction(action);
       }}
-      style={{
-        padding: "8px 16px",
-        background: "#4f46e5",
-        color: "#fff",
-        border: "none",
-        borderRadius: "6px",
-        fontSize: "1rem",
-        cursor: "pointer",
-      }}
     >
       {label}
-    </button>
+    </Button>
   );
+}
+
+function CardComponent({ renderedChildren }: AdapterProps) {
+  return (
+    <Card>
+      <Card.Body>{renderedChildren}</Card.Body>
+    </Card>
+  );
+}
+
+function BadgeComponent({ node, resolve }: AdapterProps) {
+  const label = resolve<string>(node.props.label) ?? "";
+  const variant = resolve<string>(node.props.variant) as
+    | "default"
+    | "success"
+    | "warning"
+    | "error"
+    | "info"
+    | undefined;
+
+  return <Badge variant={variant ?? "default"}>{label}</Badge>;
 }
 
 export const componentsMap: ComponentsMap = {
   Container,
-  Text,
-  Input,
-  Button,
+  Text: TextComponent,
+  Input: InputComponent,
+  Button: ButtonComponent,
+  Card: CardComponent,
+  Badge: BadgeComponent,
 };

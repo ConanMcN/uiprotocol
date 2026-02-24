@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   RuntimeProvider,
   SurfaceRenderer,
@@ -6,20 +6,69 @@ import {
   useRuntimeContext,
 } from "@uiprotocol/react";
 import { A2UIAdapter } from "@uiprotocol/a2ui";
+import { JsonRenderAdapter } from "@uiprotocol/json-render";
 import { DevToolsPanel } from "@uiprotocol/devtools";
+import {
+  Tabs,
+  Button,
+  Stack,
+  Text,
+  Box,
+  Badge,
+} from "@fragments-sdk/ui";
+import "@fragments-sdk/ui/styles";
 import { componentsMap } from "./components";
-import { steps } from "./messages";
+import { a2uiSteps } from "./a2ui-messages";
+import { jsonRenderSteps } from "./json-render-messages";
+import type { ProtocolAdapter } from "@uiprotocol/core";
 
-const adapter = new A2UIAdapter();
+const a2uiAdapter = new A2UIAdapter();
+const jsonRenderAdapter = new JsonRenderAdapter();
 
-function AgentSimulator() {
+type Protocol = "a2ui" | "json-render";
+
+interface ProtocolConfig {
+  adapter: ProtocolAdapter;
+  steps: typeof a2uiSteps;
+  description: string;
+  surfaceId: string;
+}
+
+const protocols: Record<Protocol, ProtocolConfig> = {
+  "a2ui": {
+    adapter: a2uiAdapter,
+    steps: a2uiSteps,
+    description: "Streaming messages build the UI incrementally — like an agent sending updates over a WebSocket.",
+    surfaceId: "todo-app",
+  },
+  "json-render": {
+    adapter: jsonRenderAdapter,
+    steps: jsonRenderSteps,
+    description: "Declarative specs render the full UI at once — like a single API response.",
+    surfaceId: "profile-card",
+  },
+};
+
+function ProtocolDemo({ protocol }: { protocol: Protocol }) {
   const { runtime } = useRuntimeContext();
-  const { processMessage, surfaces } = useMessages(adapter);
+  const config = protocols[protocol];
+  const { processMessage, surfaces } = useMessages(config.adapter);
   const [currentStep, setCurrentStep] = useState(0);
 
+  const cleanup = useCallback(() => {
+    // Delete any existing surfaces for this protocol
+    for (const s of runtime.getSurfaces()) {
+      runtime.applySingle({
+        type: "surface:delete",
+        surfaceId: s.id,
+        timestamp: Date.now(),
+      });
+    }
+  }, [runtime]);
+
   const handleStep = () => {
-    if (currentStep >= steps.length) return;
-    const step = steps[currentStep];
+    if (currentStep >= config.steps.length) return;
+    const step = config.steps[currentStep];
     for (const msg of step.messages) {
       processMessage(msg);
     }
@@ -27,120 +76,138 @@ function AgentSimulator() {
   };
 
   const handleReset = () => {
-    if (surfaces.length > 0) {
-      processMessage({
-        version: "v0.9",
-        deleteSurface: { surfaceId: "todo-app" },
-      });
-    }
+    cleanup();
     setCurrentStep(0);
   };
 
   const handlePlayAll = () => {
-    let stepIdx = currentStep;
-    for (let i = stepIdx; i < steps.length; i++) {
-      for (const msg of steps[i].messages) {
+    for (let i = currentStep; i < config.steps.length; i++) {
+      for (const msg of config.steps[i].messages) {
         processMessage(msg);
       }
     }
-    setCurrentStep(steps.length);
+    setCurrentStep(config.steps.length);
   };
 
   return (
-    <div style={{ display: "flex", gap: "24px", height: "100vh" }}>
-      {/* Left: Controls + Rendered UI */}
-      <div style={{ flex: 1, padding: "24px", overflow: "auto" }}>
-        <h1 style={{ margin: "0 0 4px" }}>UIProtocol</h1>
-        <p style={{ margin: "0 0 24px", color: "#666" }}>
-          Simulate an AI agent building a todo-list UI step by step.
-        </p>
+    <Stack direction="column" gap="md">
+      <Text as="p" size="sm" color="secondary">
+        {config.description}
+      </Text>
 
-        {/* Step controls */}
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <button onClick={handleStep} disabled={currentStep >= steps.length} style={btnStyle}>
-            {currentStep < steps.length
-              ? steps[currentStep].label
-              : "Done"}
-          </button>
-          <button onClick={handlePlayAll} disabled={currentStep >= steps.length} style={btnStyle}>
-            Play all
-          </button>
-          <button onClick={handleReset} style={{ ...btnStyle, background: "#666" }}>
-            Reset
-          </button>
-          <span style={{ color: "#888", fontSize: "0.85rem" }}>
-            Step {currentStep}/{steps.length}
-          </span>
-        </div>
+      {/* Step controls */}
+      <Stack direction="row" gap="sm" align="center">
+        <Button onClick={handleStep} disabled={currentStep >= config.steps.length} size="sm">
+          {currentStep < config.steps.length
+            ? config.steps[currentStep].label
+            : "Done"}
+        </Button>
+        <Button onClick={handlePlayAll} disabled={currentStep >= config.steps.length} variant="secondary" size="sm">
+          Play all
+        </Button>
+        <Button onClick={handleReset} variant="ghost" size="sm">
+          Reset
+        </Button>
+        <Badge variant="default">
+          Step {currentStep}/{config.steps.length}
+        </Badge>
+      </Stack>
 
-        {/* Progress */}
-        <div style={{ display: "flex", gap: "4px", marginBottom: "24px" }}>
-          {steps.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: "100%",
-                height: "4px",
-                borderRadius: "2px",
-                background: i < currentStep ? "#4f46e5" : "#e5e7eb",
-                transition: "background 0.2s",
-              }}
-            />
-          ))}
-        </div>
+      {/* Progress bar */}
+      <Stack direction="row" gap="xs">
+        {config.steps.map((_, i) => (
+          <Box
+            key={i}
+            style={{
+              flex: 1,
+              height: "4px",
+              borderRadius: "2px",
+              background: i < currentStep
+                ? "var(--fui-color-accent)"
+                : "var(--fui-color-border-default)",
+              transition: "background 0.2s",
+            }}
+          />
+        ))}
+      </Stack>
 
-        {/* Rendered surface */}
-        <div
-          style={{
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-            padding: "24px",
-            minHeight: "200px",
-            background: "#fafafa",
-          }}
-        >
-          {surfaces.length === 0 ? (
-            <p style={{ color: "#aaa", textAlign: "center", margin: "48px 0" }}>
-              No surfaces yet. Click a step to start.
-            </p>
-          ) : (
-            surfaces.map((s) => (
-              <SurfaceRenderer key={s.id} surfaceId={s.id} />
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Right: DevTools */}
-      <div
-        style={{
-          width: "420px",
-          borderLeft: "1px solid #e5e7eb",
-          overflow: "auto",
-        }}
+      {/* Rendered surface */}
+      <Box
+        border
+        rounded="md"
+        padding="lg"
+        background="secondary"
+        style={{ minHeight: "200px" }}
       >
-        <DevToolsPanel runtime={runtime} />
-      </div>
-    </div>
+        {surfaces.length === 0 ? (
+          <Text as="p" color="tertiary" style={{ textAlign: "center", margin: "48px 0" }}>
+            No surfaces yet. Click a step to start.
+          </Text>
+        ) : (
+          surfaces.map((s) => (
+            <SurfaceRenderer key={s.id} surfaceId={s.id} />
+          ))
+        )}
+      </Box>
+
+      {/* DevTools */}
+      <DevToolsPanel runtime={runtime} />
+    </Stack>
   );
 }
 
-const btnStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  background: "#4f46e5",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  fontSize: "0.9rem",
-  cursor: "pointer",
-};
+function AppContent() {
+  const { runtime } = useRuntimeContext();
+  const [protocol, setProtocol] = useState<Protocol>("a2ui");
+  const [resetKey, setResetKey] = useState(0);
+
+  const handleProtocolChange = (val: string) => {
+    // Clean up all surfaces when switching protocols
+    for (const s of runtime.getSurfaces()) {
+      runtime.applySingle({
+        type: "surface:delete",
+        surfaceId: s.id,
+        timestamp: Date.now(),
+      });
+    }
+    setProtocol(val as Protocol);
+    setResetKey((k) => k + 1);
+  };
+
+  return (
+    <Box padding="lg" style={{ maxWidth: "900px", margin: "0 auto" }}>
+      <Stack direction="column" gap="lg">
+        <Stack direction="column" gap="xs">
+          <Text as="h1" size="xl" weight="bold">UIProtocol</Text>
+          <Text as="p" color="secondary">
+            Protocol-agnostic runtime for agent-generated UIs.
+            Switch protocols below — same runtime, same components, different wire formats.
+          </Text>
+        </Stack>
+
+        <Tabs
+          value={protocol}
+          onValueChange={handleProtocolChange}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="a2ui">A2UI Protocol</Tabs.Tab>
+            <Tabs.Tab value="json-render">json-render Protocol</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="a2ui">
+            <Box paddingY="md">
+              <ProtocolDemo key={`a2ui-${resetKey}`} protocol="a2ui" />
+            </Box>
+          </Tabs.Panel>
+          <Tabs.Panel value="json-render">
+            <Box paddingY="md">
+              <ProtocolDemo key={`json-render-${resetKey}`} protocol="json-render" />
+            </Box>
+          </Tabs.Panel>
+        </Tabs>
+      </Stack>
+    </Box>
+  );
+}
 
 export function App() {
   return (
@@ -150,7 +217,7 @@ export function App() {
       onClientError={(error) => console.error("Client error:", error)}
       onWarning={(warning) => console.warn("Warning:", warning)}
     >
-      <AgentSimulator />
+      <AppContent />
     </RuntimeProvider>
   );
 }

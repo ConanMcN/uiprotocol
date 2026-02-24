@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uiprotocol/core": "workspace:*",
+    "@fragments-sdk/ui": "^0.14.0",
     "@uiprotocol/a2ui": "workspace:*",
-    "@uiprotocol/react": "workspace:*",
+    "@uiprotocol/core": "workspace:*",
     "@uiprotocol/devtools": "workspace:*",
+    "@uiprotocol/json-render": "^0.1.0",
+    "@uiprotocol/react": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

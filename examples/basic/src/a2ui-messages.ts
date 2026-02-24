@@ -1,9 +1,9 @@
 /**
- * Mock A2UI agent messages that simulate an AI agent building a UI.
- * Each step sends one or more messages to construct a todo-list surface.
+ * Mock A2UI agent messages that simulate an AI agent building a todo-list UI.
+ * Each step sends one or more A2UI protocol messages.
  */
 
-export const steps = [
+export const a2uiSteps = [
   {
     label: "1. Create surface + layout",
     messages: [
