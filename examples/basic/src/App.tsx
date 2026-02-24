@@ -3,6 +3,7 @@ import {
   RuntimeProvider,
   SurfaceRenderer,
   useMessages,
+  useRuntimeContext,
 } from "@uiprotocol/react";
 import { A2UIAdapter } from "@uiprotocol/a2ui";
 import { DevToolsPanel } from "@uiprotocol/devtools";
@@ -12,6 +13,7 @@ import { steps } from "./messages";
 const adapter = new A2UIAdapter();
 
 function AgentSimulator() {
+  const { runtime } = useRuntimeContext();
   const { processMessage, surfaces } = useMessages(adapter);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -124,7 +126,7 @@ function AgentSimulator() {
           overflow: "auto",
         }}
       >
-        <DevToolsPanel />
+        <DevToolsPanel runtime={runtime} />
       </div>
     </div>
   );
