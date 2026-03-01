@@ -33,8 +33,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/devtools
       '@uiprotocol/json-render':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: workspace:*
+        version: link:../../packages/json-render
       '@uiprotocol/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -973,14 +973,6 @@ packages:
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
-
-  '@uiprotocol/core@0.1.0':
-    resolution: {integrity: sha512-lA8otqD2jb7iTn1jkc6JXWWdCeUD8UaNokniGdfUGVNLRSUUdwNbDQo5Lw0q305grjuL0FDtJw10IhYR+4S/dA==}
-    engines: {node: '>=18'}
-
-  '@uiprotocol/json-render@0.1.0':
-    resolution: {integrity: sha512-vC72Cl9pEkgK7IUZcbw4zDTnco04pL3ZespRAkmP7dc2Wtt3rHx913hAa5vTOxpls60lBk9pjW08WYKeEr0c/A==}
-    engines: {node: '>=18'}
 
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
@@ -2621,12 +2613,6 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
-
-  '@uiprotocol/core@0.1.0': {}
-
-  '@uiprotocol/json-render@0.1.0':
-    dependencies:
-      '@uiprotocol/core': 0.1.0
 
   '@vitejs/plugin-react@4.7.0(vite@6.4.1)':
     dependencies:
